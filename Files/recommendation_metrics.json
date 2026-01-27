@@ -1,0 +1,1 @@
+{"content_based": {"genre_diversity": [], "response_time": [], "user_satisfaction": {}}, "collaborative": {"prediction_accuracy": [], "response_time": [0.9410719871520996], "user_satisfaction": {}}, "hybrid": {"genre_diversity": [1.0], "prediction_accuracy": [], "response_time": [1.9060280323028564], "user_satisfaction": {}}}
