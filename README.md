@@ -120,7 +120,7 @@ If MongoDB isn't running locally on `mongodb://localhost:27017/`, the app falls 
 ```bash
 docker run -d -p 27017:27017 --name mongo \
   -e MONGO_INITDB_ROOT_USERNAME=vved \
-  -e MONGO_INITDB_ROOT_PASSWORD=vatsall27 \
+  -e MONGO_INITDB_ROOT_PASSWORD=_____ \
   mongo
 ```
 
