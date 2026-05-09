@@ -11,7 +11,7 @@ Our Movie Recommender System, built using Python and Natural Language Processing
 
 - **Hybrid Recommendations**: Combines personal preferences with popular choices for the best of both worlds
 - **Content-Based Filtering**: Suggests movies based on your favorite genres, directors, and movie styles
-- **Collaborative Filtering**: Recommends movies enjoyed by users with similar taste
+- **Collaborative Filtering**: Recommends movies enjoyed by users with similar taste profile
 
 Key Features:
 - Personalized movie recommendations based on your preferences and ratings
