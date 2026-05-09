@@ -3,132 +3,58 @@ import pandas as pd
 import json
 import os
 from pathlib import Path
+from processing.database import Database
 
 class UserAuth:
     def __init__(self):
-        self.users_file = Path('Files/users.json')
-        self.ratings_file = Path('Files/user_ratings.json')
-        self.preferences_file = Path('Files/user_preferences.json')
-        self._initialize_files()
-
-    def _initialize_files(self):
-        # Create Files directory if it doesn't exist
-        Path('Files').mkdir(exist_ok=True)
-        
-        # Initialize users file
-        if not self.users_file.exists():
-            self._save_json(self.users_file, {})
-        
-        # Initialize ratings file
-        if not self.ratings_file.exists():
-            self._save_json(self.ratings_file, {})
-            
-        # Initialize preferences file
-        if not self.preferences_file.exists():
-            self._save_json(self.preferences_file, {})
-
-    def _save_json(self, file_path, data):
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-
-    def _load_json(self, file_path):
-        with open(file_path, 'r') as f:
-            return json.load(f)
+        self.db = Database()
 
     def register_user(self, username, password):
-        users = self._load_json(self.users_file)
-        if username in users:
-            return False, 'Username already exists'
-        
-        users[username] = {
-            'password': password,
-            'completed_onboarding': False
-        }
-        self._save_json(self.users_file, users)
-        return True, 'Registration successful'
+        return self.db.register_user(username, password)
 
     def login_user(self, username, password):
-        users = self._load_json(self.users_file)
-        if username not in users or users[username]['password'] != password:
-            return False, 'Invalid username or password'
-        return True, 'Login successful'
+        return self.db.login_user(username, password)
 
     def save_user_preferences(self, username, preferences):
-        user_prefs = self._load_json(self.preferences_file)
-        user_prefs[username] = preferences
-        self._save_json(self.preferences_file, user_prefs)
-        
-        # Mark onboarding as completed
-        users = self._load_json(self.users_file)
-        users[username]['completed_onboarding'] = True
-        self._save_json(self.users_file, users)
+        return self.db.save_user_preferences(username, preferences)
 
     def get_user_preferences(self, username):
-        user_prefs = self._load_json(self.preferences_file)
-        return user_prefs.get(username, {})
+        return self.db.get_user_preferences(username)
 
     def save_user_rating(self, username, movie_id, rating):
-        ratings = self._load_json(self.ratings_file)
-        if username not in ratings:
-            ratings[username] = {}
-            
-        # Check if this is a new rating or an update
-        is_new_rating = str(movie_id) not in ratings[username]
-        old_rating = ratings[username].get(str(movie_id), 0)
-        
-        # Save the new rating
-        ratings[username][str(movie_id)] = rating
-        self._save_json(self.ratings_file, ratings)
-        
-        # Trigger recommendation model update
-        # This ensures real-time model retraining based on user feedback
+        old_rating = self.db.get_user_ratings(username).get(str(movie_id), 0)
+        is_new_rating = old_rating == 0
+        result = self.db.save_user_rating(username, movie_id, rating)
+
         try:
-            from processing.recommendation import RecommendationEngine
-            rec_engine = RecommendationEngine()
-            
-            # Force refresh recommendations in session state
-            import streamlit as st
             st.session_state.refresh_recommendations = True
-            
-            # Reset loaded movies count to show fresh recommendations
-            if 'loaded_movies_count' in st.session_state:
-                st.session_state.loaded_movies_count = 10
-                
-            # Clear any cached recommendations to ensure fresh results
-            if 'cached_recommendations' in st.session_state:
-                del st.session_state.cached_recommendations
-                
-            # Also clear cached model type to force a complete refresh
-            if 'cached_model_type' in st.session_state:
-                del st.session_state.cached_model_type
-                
-            # Clear cached timestamp to ensure fresh recommendations
-            if 'cached_timestamp' in st.session_state:
-                del st.session_state.cached_timestamp
-            
-            # Record the rating change in metrics for model improvement
-            # For both new ratings and updates, as both affect recommendations
+            for key in ('loaded_movies_count', 'cached_recommendations',
+                        'cached_model_type', 'cached_timestamp'):
+                if key == 'loaded_movies_count':
+                    if key in st.session_state:
+                        st.session_state.loaded_movies_count = 10
+                elif key in st.session_state:
+                    del st.session_state[key]
+
             rating_change = abs(rating - old_rating) if not is_new_rating else rating
             if rating_change > 0:
                 from processing.metrics import RecommendationMetrics
                 metrics = RecommendationMetrics()
-                # Record the rating change for all model types to improve them
                 for model_type in ['content_based', 'collaborative', 'hybrid']:
                     metrics.record_rating_change(model_type, username, movie_id, old_rating, rating)
-                    
-            # Log the rating activity
-            print(f"User {username} rated movie {movie_id} with {rating} stars. Recommendations will refresh.")
         except Exception as e:
             print(f"Error updating recommendation models: {e}")
-            # Even if update fails, the rating is still saved
+
+        return result
 
     def get_user_ratings(self, username):
-        ratings = self._load_json(self.ratings_file)
-        return ratings.get(username, {})
+        return self.db.get_user_ratings(username)
 
     def needs_onboarding(self, username):
-        users = self._load_json(self.users_file)
-        return not users[username]['completed_onboarding']
+        user = self.db.get_user(username)
+        if not user:
+            return True
+        return not user.get('completed_onboarding', False)
 
 def render_auth_page():
     if 'user' not in st.session_state:

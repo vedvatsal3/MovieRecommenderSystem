@@ -52,7 +52,7 @@ class Database:
     
     def _initialize_collections(self):
         """Initialize MongoDB collections if connection is successful"""
-        if self.db:
+        if self.db is not None:
             # Create collections if they don't exist
             if 'users' not in self.db.list_collection_names():
                 self.db.create_collection('users')
@@ -82,7 +82,7 @@ class Database:
     
     def _migrate_data_to_mongodb(self):
         """Migrate data from JSON files to MongoDB if files exist"""
-        if not self.db:
+        if self.db is None:
             return
         
         # Migrate users
@@ -197,7 +197,7 @@ class Database:
     
     def _check_rate_limit(self, username, action):
         """Check if user has exceeded rate limit for an action"""
-        if not self.db:
+        if self.db is None:
             return True  # Skip rate limiting if MongoDB is not available
         
         now = datetime.now()
@@ -238,7 +238,7 @@ class Database:
         if not self._check_rate_limit('anonymous', 'register'):
             return False, 'Too many registration attempts. Please try again later.'
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Check if username exists
                 if self.db.users.find_one({'username': username}):
@@ -298,7 +298,7 @@ class Database:
         if not self._check_rate_limit(username, 'login'):
             return False, 'Too many login attempts. Please try again later.'
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Find user
                 user = self.db.users.find_one({'username': username})
@@ -334,7 +334,7 @@ class Database:
     # User Preferences Methods
     def save_user_preferences(self, username, preferences):
         """Save user preferences to MongoDB"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Update preferences
                 self.db.preferences.update_one(
@@ -384,7 +384,7 @@ class Database:
     
     def get_user(self, username):
         """Get user information from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find user
                 user = self.db.users.find_one({'username': username})
@@ -419,7 +419,7 @@ class Database:
     
     def get_all_users(self):
         """Get all users from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find all users
                 users_cursor = self.db.users.find({}, {'password': 0, 'salt': 0})
@@ -462,7 +462,7 @@ class Database:
             if field in update_data:
                 del update_data[field]
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Update user
                 result = self.db.users.update_one(
@@ -494,7 +494,7 @@ class Database:
     
     def get_user_preferences(self, username):
         """Get user preferences from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find preferences
                 preferences_doc = self.db.preferences.find_one({'username': username})
@@ -516,7 +516,7 @@ class Database:
     
     def get_user(self, username):
         """Get user information from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find user
                 user = self.db.users.find_one({'username': username})
@@ -551,7 +551,7 @@ class Database:
     
     def get_all_users(self):
         """Get all users from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find all users
                 users_cursor = self.db.users.find({}, {'password': 0, 'salt': 0})
@@ -594,7 +594,7 @@ class Database:
             if field in update_data:
                 del update_data[field]
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Update user
                 result = self.db.users.update_one(
@@ -626,7 +626,7 @@ class Database:
     
     def get_user_ratings(self, username):
         """Get user ratings from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find ratings
                 ratings_cursor = self.db.ratings.find({'username': username})
@@ -664,7 +664,7 @@ class Database:
         if not self._check_rate_limit(username, 'rate_movie'):
             return False, 'Too many rating attempts. Please try again later.'
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Update rating
                 self.db.ratings.update_one(
@@ -704,7 +704,7 @@ class Database:
         if not username or not movie_id:
             return False, 'Username and movie ID are required'
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Delete rating
                 result = self.db.ratings.delete_one({'username': username, 'movie_id': movie_id})
@@ -732,7 +732,7 @@ class Database:
     
     def get_recommendation_metrics(self):
         """Get recommendation metrics from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find metrics
                 metrics_doc = self.db.metrics.find_one({'_id': 'recommendation_metrics'})
@@ -760,7 +760,7 @@ class Database:
         if not isinstance(metrics, dict):
             return False, 'Metrics must be a dictionary'
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Update metrics
                 self.db.metrics.update_one(
@@ -782,7 +782,7 @@ class Database:
     
     def get_user(self, username):
         """Get user information from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find user
                 user = self.db.users.find_one({'username': username})
@@ -817,7 +817,7 @@ class Database:
     
     def get_all_users(self):
         """Get all users from MongoDB or file"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Find all users
                 users_cursor = self.db.users.find({}, {'password': 0, 'salt': 0})
@@ -860,7 +860,7 @@ class Database:
             if field in update_data:
                 del update_data[field]
         
-        if self.db:
+        if self.db is not None:
             try:
                 # Update user
                 result = self.db.users.update_one(

@@ -41,9 +41,49 @@ Key Features:
 
 **Analytics Page:** Track recommendation performance and user engagement metrics.
 
-## Installation Guide
+## Quick Start with Docker (Recommended)
 
-Follow these steps to set up and run the application:
+The fastest way to run the full stack — Streamlit app, MongoDB, and Mongo Express (database admin UI) — all wired together in containers.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/vedvatsal3/MovieRecommenderSystem.git
+   cd MovieRecommenderSystem
+   ```
+
+2. **Start everything:**
+   ```bash
+   docker compose up -d
+   ```
+   The first run pulls the prebuilt image from Docker Hub (`vved/movie-recommender`), MongoDB, and Mongo Express. Subsequent runs are instant.
+
+3. **Open the app:**
+   - Streamlit app → [http://localhost:8501](http://localhost:8501)
+   - Mongo Express (database UI) → [http://localhost:8081](http://localhost:8081) (login: `admin` / `pass`)
+
+4. **Stop the stack:**
+   ```bash
+   docker compose down        # stops containers, keeps your data
+   docker compose down -v     # also removes data volumes (fresh slate)
+   ```
+
+User accounts, ratings, and preferences persist across restarts thanks to a named volume mounted at MongoDB's `/data/db`.
+
+### Pull just the app image
+
+The Streamlit image is published on Docker Hub:
+
+```bash
+docker pull vved/movie-recommender:latest
+```
+
+You'll still need MongoDB to run it usefully — the `docker-compose.yaml` in this repo handles that.
+
+## Local Setup (Without Docker)
+
+If you'd rather run the app directly on your machine — useful for development:
 
 1. **Clone the Repository:** 
     ```bash
@@ -55,37 +95,36 @@ Follow these steps to set up and run the application:
 
    **For macOS/Linux:**
    ```bash
-   # Create a virtual environment
    python3 -m venv venv
-   
-   # Activate the virtual environment
    source venv/bin/activate
    ```
 
    **For Windows:**
    ```bash
-   # Create a virtual environment
    python -m venv venv
-   
-   # Activate the virtual environment
    venv\Scripts\activate
    ```
-   
-   You can also use the already existing virtual environment if you have one.
 
 3. **Install Dependencies:**
-   Install the required dependencies using the `requirements.txt` file:
    ```bash
    pip install -r requirements.txt
    ```
 
 4. **Run the Application:**
-   To start the app, execute the following command in your terminal:
    ```bash
    streamlit run main.py
    ```
 
-**Note**: When running the application for the first time, it may take some time as it creates necessary files and initializes the environment.
+If MongoDB isn't running locally on `mongodb://localhost:27017/`, the app falls back to file-based storage in `Files/`. To use MongoDB locally, either install it directly or run just the database container:
+
+```bash
+docker run -d -p 27017:27017 --name mongo \
+  -e MONGO_INITDB_ROOT_USERNAME=vved \
+  -e MONGO_INITDB_ROOT_PASSWORD=vatsall27 \
+  mongo
+```
+
+**Note:** First run takes a moment as it initializes recommendation models and downloads NLTK data.
 
 ## Features in Detail
 
